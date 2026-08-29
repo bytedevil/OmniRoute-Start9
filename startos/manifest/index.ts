@@ -19,12 +19,15 @@ export const manifest = setupManifest({
         // Build the upstream multi-stage Dockerfile (repo root). The default
         // final stage (runner-cli) is what upstream's production compose uses.
         // Memory: GitHub runners (16 GB) + QEMU for arm64 cannot hold the
-        // upstream defaults (6 GB heap × parent+worker). Cap the build budget
-        // so the Next.js build never OOMs the runner (docker-build-memory-
-        // budget-test covers these knobs).
+        // upstream defaults (6 GB heap × parent+worker). Turbopack compiles
+        // in native Rust memory that NODE_OPTIONS cannot bound (per the
+        // Dockerfile's own notes) — the escape hatch the project documents is
+        // webpack (V8-bounded). Single process (0 workers) + 4 GB heap fits
+        // comfortably on a 16 GB runner, even under QEMU.
         dockerBuild: {
           buildArgs: {
-            OMNIROUTE_BUILD_MEMORY_MB: '3072',
+            OMNIROUTE_USE_TURBOPACK: '0',
+            OMNIROUTE_BUILD_MEMORY_MB: '4096',
             OMNIROUTE_BUILD_WORKERS: '1',
           },
         },
