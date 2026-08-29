@@ -18,7 +18,16 @@ export const manifest = setupManifest({
       source: {
         // Build the upstream multi-stage Dockerfile (repo root). The default
         // final stage (runner-cli) is what upstream's production compose uses.
-        dockerBuild: {},
+        // Memory: GitHub runners (16 GB) + QEMU for arm64 cannot hold the
+        // upstream defaults (6 GB heap × parent+worker). Cap the build budget
+        // so the Next.js build never OOMs the runner (docker-build-memory-
+        // budget-test covers these knobs).
+        dockerBuild: {
+          buildArgs: {
+            OMNIROUTE_BUILD_MEMORY_MB: '3072',
+            OMNIROUTE_BUILD_WORKERS: '1',
+          },
+        },
       },
       arch: ['x86_64', 'aarch64'],
     },
