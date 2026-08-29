@@ -1,0 +1,100 @@
+name: Build StartOS s9pk
+
+# Builds the universal OmniRoute .s9pk (x86_64 + aarch64) for StartOS.
+# The app's own CI workflows are untouched; this one only adds the package.
+#
+# The app repository root is also the StartOS package root: `startos/` holds
+# the SDK code (bundled to ../javascript via ncc) and the app's own
+# multi-stage Dockerfile at the root is the container image.
+
+on:
+  push:
+    branches: [startos]
+    # StartOS git tag convention: v{version}_{revision} (e.g. v3.8.51_0)
+    tags: ['v*_?*', 'v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout package
+        uses: actions/checkout@v4
+        with:
+          path: omniroute
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Set up QEMU (aarch64 builds)
+        uses: docker/setup-qemu-action@v4
+
+      # docker-container driver: required so `docker buildx build -o type=docker`
+      # (what `start-cli s9pk pack` runs internally) is supported.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Install packaging tools
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends squashfs-tools-ng jq
+          # The public installer hits api.github.com unauthenticated and
+          # gets rate-limited (403) on busy runners. Download the pinned
+          # release asset directly with the workflow's own token.
+          mkdir -p "$HOME/.start9/bin"
+          curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+            -o "$HOME/.start9/bin/start-cli" \
+            "https://github.com/Start9Labs/start-technologies/releases/download/start-cli%2Fv1.1.0/start-cli_x86_64-linux"
+          chmod +x "$HOME/.start9/bin/start-cli"
+          "$HOME/.start9/bin/start-cli" --version
+          echo "$HOME/.start9/bin" >> "$GITHUB_PATH"
+
+      - name: Bundle StartOS code
+        working-directory: omniroute/startos
+        run: |
+          npm install --no-audit --no-fund
+          npm run check
+          npm run build
+
+      - name: Create packaging workspace and signing key
+        run: |
+          mkdir -p workspace
+          cd workspace
+          start-cli s9pk init-workspace .
+          # Pack is local-only: point the default host at localhost so
+          # start-cli never tries to resolve the template's dev-vm.local
+          sed -i 's|default: https://.*|default: http://localhost|' .startos/config.yaml
+          cat .startos/config.yaml
+          # Move the package into the workspace so the signing key is found
+          mv ../omniroute .
+
+      - name: Build universal s9pk
+        working-directory: workspace/omniroute
+        run: |
+          start-cli s9pk pack -o omniroute.s9pk
+
+      - name: Inspect package
+        working-directory: workspace/omniroute
+        run: |
+          start-cli s9pk inspect omniroute.s9pk manifest
+          ls -lh *.s9pk
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omniroute-s9pk
+          path: workspace/omniroute/*.s9pk
+          if-no-files-found: error
+
+      - name: Release on tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: workspace/omniroute/*.s9pk
+          generate_release_notes: true
