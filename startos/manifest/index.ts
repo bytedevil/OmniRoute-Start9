@@ -27,7 +27,7 @@ export const manifest = setupManifest({
         dockerBuild: {
           buildArgs: {
             OMNIROUTE_USE_TURBOPACK: '0',
-            OMNIROUTE_BUILD_MEMORY_MB: '4096',
+            OMNIROUTE_BUILD_MEMORY_MB: '2048',
             OMNIROUTE_BUILD_WORKERS: '1',
           },
         },
