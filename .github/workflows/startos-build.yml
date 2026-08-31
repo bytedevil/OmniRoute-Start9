@@ -81,10 +81,7 @@ jobs:
         # blow past RAM. Use webpack (V8-bounded) + 0 workers + 2 GB heap so
         # the parent process alone fits comfortably.
         run: |
-          start-cli s9pk pack -o omniroute.s9pk \
-            --build-arg OMNIROUTE_USE_TURBOPACK=0 \
-            --build-arg OMNIROUTE_BUILD_WORKERS=1 \
-            --build-arg OMNIROUTE_BUILD_MEMORY_MB=2048
+          start-cli s9pk pack -o omniroute.s9pk
 
       - name: Inspect package
         working-directory: workspace/omniroute
