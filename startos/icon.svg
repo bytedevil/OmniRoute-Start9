@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#1a2340"/>
+    </linearGradient>
+    <linearGradient id="route" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4d6bfe"/>
+      <stop offset="1" stop-color="#7c93ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#bg)"/>
+  <!-- route: S-curve from bottom-left to top-right, three provider nodes -->
+  <path d="M24 96 C 40 96, 44 74, 60 74 S 84 32, 104 32" fill="none" stroke="url(#route)" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="24" cy="96" r="9" fill="#4d6bfe"/>
+  <circle cx="60" cy="74" r="8" fill="#7c93ff"/>
+  <circle cx="104" cy="32" r="10" fill="#ffffff"/>
+  <circle cx="104" cy="32" r="4" fill="#4d6bfe"/>
+</svg>
