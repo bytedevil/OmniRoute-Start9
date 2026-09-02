@@ -4,7 +4,7 @@
   "private": true,
   "description": "StartOS packaging for OmniRoute — isolated from the app's own package.json (repo root). Build with `npm ci && npx ncc build index.ts -o ../javascript` from this directory.",
   "scripts": {
-    "build": "rm -rf ../javascript && ncc build \"$PWD/index.ts\" -o ../javascript && printf '{\"type\":\"commonjs\"}\\n' > ../javascript/package.json",
+    "build": "rm -rf ./javascript && ncc build \"$PWD/index.ts\" -o ./javascript && printf '{\"type\":\"commonjs\"}\\n' > ./javascript/package.json",
     "check": "tsc --noEmit"
   },
   "dependencies": {
