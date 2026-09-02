@@ -75,7 +75,7 @@ jobs:
           mv ../omniroute .
 
       - name: Build universal s9pk
-        working-directory: workspace/omniroute
+        working-directory: workspace/omniroute/startos
         # Memory budget for the upstream Next.js builder on a 16 GB GitHub
         # runner (4 vCPU): the Dockerfile defaults (6 GB heap × parent+worker)
         # blow past RAM. Use webpack (V8-bounded) + 0 workers + 2 GB heap so
@@ -84,7 +84,7 @@ jobs:
           start-cli s9pk pack -o omniroute.s9pk
 
       - name: Inspect package
-        working-directory: workspace/omniroute
+        working-directory: workspace/omniroute/startos
         run: |
           start-cli s9pk inspect omniroute.s9pk manifest
           ls -lh *.s9pk
@@ -93,12 +93,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: omniroute-s9pk
-          path: workspace/omniroute/*.s9pk
+          path: workspace/omniroute/startos/*.s9pk
           if-no-files-found: error
 
       - name: Release on tags
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: workspace/omniroute/*.s9pk
+          files: workspace/omniroute/startos/*.s9pk
           generate_release_notes: true
